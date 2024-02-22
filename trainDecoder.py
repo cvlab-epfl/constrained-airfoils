@@ -46,7 +46,7 @@ if(loadP):
     dataT.setids(randP=False)
 else:
     # Train network
-    net.gtrain(dataT,fileName=fName, nIt=100)
+    net.gtrain(dataT,fileName=fName, nIt=10000)
 #%%---------------------------------------------------------------------------
 #                          Train Autodecoder + Projector
 #-----------------------------------------------------------------------------
@@ -75,7 +75,7 @@ with warnings.catch_warnings():
     ns  = 1000
     ids = torch.tensor(range(ns),device=dataT.target.device)
     dataZ = NetData(dataT.inputs(ids).detach(),dataT.target[0:ns].detach(),batchN=10)
-    net.gtrain(dataZ,fileName=fileName, nIt=2)
+    net.gtrain(dataZ,fileName=fileName, nIt=100)
 #%% Interpolate between two latent vectors
 zs,xys0 = dataT.batch(0)
 i1  = 0
