@@ -15,7 +15,7 @@ from ddn.pytorch.node import EqConstDeclarativeNode,DeclarativeLayer
 from netw.gradnet     import GradNet
 
 from decoder  import PerceptronDecoder
-from auxfuncs import fromTensor,currentDevice,shoelaceArea1,shoelaceAreaF,affTrf
+from auxfuncs import fromTensor,currentDevice,shoelaceArea1,shoelaceAreaF,affTrf,batchShoelaceArea
 from auxfuncs import loadWingProfiles,drawAirfoil
 #%%
 class AreaProjector(GradNet):
@@ -106,26 +106,10 @@ class constAreaNode(EqConstDeclarativeNode):
         return 0.5*d2.sum(dim=1)
     
     def equality_constraints(self,x,y=None):
- 
-        targetA = self.targetA
-        if(True):
-            cs      = []
-        else:
-            ns      = x.size(0)
-            cs      = torch.zeros(ns,dtype=torch.float32,requires_grad=True)
-        
         with torch.enable_grad():
-            for i, xy in enumerate(y):   
-                areaI  = shoelaceArea1(xy)
-                if(True):
-                    cs.append(areaI-targetA)
-                else:
-                    cs[i] = areaI-targetA
-        
-        if(True):
-            return torch.vstack(cs)
-        else:
-            return cs 
+            area = batchShoelaceArea(y)
+        cs = (area - self.targetA)[:,None]
+        return cs
         
     def solve(self,xys0):
         

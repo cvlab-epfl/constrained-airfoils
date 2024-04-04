@@ -115,6 +115,26 @@ def shoelaceArea2(xy):
     area = torch.sum(y1*x0)-torch.sum(y0*x1)
     return area/2.0
 
+def batchShoelaceArea(points):
+    # points is (bs,2*num_points) or (bs,num_points,2)
+    bs = points.shape[0]
+    if len(points.shape) == 2:
+        assert points.shape[-1] % 2 == 0
+        num_points = points.shape[-1] // 2
+        points = points.reshape(bs, num_points, 2)
+    elif len(points.shape) == 3:
+        assert points.shape[-1] == 2
+        num_points = points.shape[1]
+    else:
+        raise ValueError(f'Wrong shape, got {points.shape} but expected (bs,2*num_points) or (bs,num_points,2)')
+    # now points is (bs,num_points,2)
+    points_rot = torch.cat([points[:,-1:], points[:,:-1]], dim=1)
+
+    area = (points_rot[:,:,1]*points[:,:,0]).sum(dim=-1) - (points[:,:,1]*points_rot[:,:,0]).sum(dim=-1)
+    area = area / 2
+
+    return area
+
 #%%---------------------------------------------------------------------------
 #                               Affine Transform
 #-----------------------------------------------------------------------------
