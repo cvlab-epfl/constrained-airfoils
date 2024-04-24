@@ -18,7 +18,7 @@ from netw.layer      import variableP
 #%%
 class NetData():
     
-    def __init__(self,inp,out,ws=None,batchN=1,intP=False,name=None,loadP=False):
+    def __init__(self,inp,out,cdl=None,ws=None,batchN=1,intP=False,name=None,loadP=False):
         
         if(loadP):
             inp,out,ws=self.load(name)
@@ -43,6 +43,15 @@ class NetData():
             self.target=longTensor(out) 
         else:
             self.target=makeTensor(out)
+            
+        if(out is None):
+            self.target_cdl=None
+        elif(variableP(out)):
+            self.target_cdl=cdl
+        elif intP:
+            self.target_cdl=longTensor(cdl) 
+        else:
+            self.target_cdl=makeTensor(cdl)
             
         if(ws is None):
             self.weights=None
@@ -75,6 +84,19 @@ class NetData():
             self.yv = None
             self.os = 0
             
+        if(cdl is not None):
+            dims    = list(self.target_cdl.size())
+            if(self.batchL>0):
+                dims[0] = self.batchL
+            if(intP):
+                self.cdlv  = longTensor(*dims)
+            else:
+                self.cdlv  = floatTensor(*dims)
+            self.osdl = self.target_cdl.size(0)
+        else:
+            self.cdlv = None
+            self.osdl = 0
+            
         if(ws is not None):
             dims    = list(self.weights.size())
             if(self.batchL>0):
@@ -84,7 +106,7 @@ class NetData():
             self.wv = None
             
         assert(self.ns==(self.batchL*self.batchN))
-            
+                    
             
     def shuffle(self):
         
@@ -94,6 +116,8 @@ class NetData():
                 self.inputs=self.inputs[pns]
             if(self.target is not None):
                 self.target=self.target[pns]
+            if(self.target_cdl is not None):
+                self.target_cdl=self.target_cdl[pns]
             if(self.weights is not None):
                 self.weights=self.weights[pns]
         
@@ -123,7 +147,14 @@ class NetData():
         else:
             wv = None
             
-        return xv,yv,wv
+        if((self.target_cdl is not None) and ((i+self.batchL)<=self.os)):
+            cdlv=self.cdl
+            cdls=self.target_cdl[i:i+self.batchL]
+            cdlv.copy_(cdls)
+        else:
+            cdlv=None
+            
+        return xv,yv,wv,cdlv
         
     def sample(self,n):
         
@@ -140,7 +171,11 @@ class NetData():
             ws = self.weights[indices]
         else:
             ws=None
-        return xs,ys,ws,indices
+        if(self.target_cdl is not None):
+            cdls = self.target_cdl[indices]
+        else:
+            cdls=None
+        return xs,ys,ws,cdls,indices
 
     def save(self,fileName):  
         if(fileName is not None):
@@ -150,17 +185,21 @@ class NetData():
                 dumpToFile(fileName+'.out',self.target.numpy())
             if(self.weights is not None):
                 dumpToFile(fileName+'.wgs',self.weights.numpy())
+            if(self.target_cdl is not None):
+                dumpToFile(fileName+'.cdl',self.target_cdl.numpy())
                 
     def load(self,name):
          xs = loadFromFile(name+'.inp',verbP=False)
          ys = loadFromFile(name+'.out',verbP=False)
          ws = loadFromFile(name+'.wgs',verbP=False)
+         cdls = loadFromFile(name+'.cdl',verbP=False)
+
          if(xs is not None):
              print('Data loaded from {}'.format(name))
-             return xs,ys,ws
+             return xs,ys,ws,cdls
          else:
              print('Could not load data from {}'.format(name))
-             return None,None,None
+             return None,None,None,None
 #%%
 #if __name__ == "__main__":
 #    from mnist import selectMNIST 

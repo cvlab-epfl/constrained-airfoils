@@ -47,7 +47,7 @@ class AutoDecoder (GradNet):
                 data.setids(True)
                 
             for batc in range(data.batchN):
-                latentB,targetB=data.batch(batc)
+                latentB,targetB,testB=data.batch(batc)
                 outputsB  = self(latentB)
                 lossB     = self.lossFunction(outputsB,targetB)          
                 loss     += lossB

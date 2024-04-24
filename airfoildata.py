@@ -18,9 +18,9 @@ from auxfuncs import loadWingProfiles
 #%%        
 class LatentData(NetData):
     
-    def __init__(self,inp,out,batchN=1):
+    def __init__(self,inp,out,cdl,batchN=1):
         
-        super(LatentData, self).__init__(inp,out,batchN=batchN)
+        super(LatentData, self).__init__(inp,out,cdl,batchN=batchN)
         
         self.setids(randP=False)
         
@@ -30,13 +30,14 @@ class LatentData(NetData):
         
         #
         self.inputs = latentZs #latentZs(idx)
-        
+                
     def latent(self):
         
         ns     = self.batchL*self.batchN
         device = self.target.device
         idx    = torch.tensor(np.arange(0,ns,1,dtype=np.int32),device=device)
         return(self.inputs(idx))
+    
         
     def batch(self,i=0):
         
@@ -48,15 +49,21 @@ class LatentData(NetData):
             xv  = self.inputs(idx)
         else:
             xv = None
-        
         if((self.target is not None) and ((i+self.batchL)<=self.os)):
             yv=self.yv
             ys=self.target[ids]
             yv.copy_(ys)
         else:
-            yv = None       
+            yv = None 
+        if((self.target_cdl is not None) and ((i+self.batchL)<=self.osdl)):
+            cdlv=self.cdlv
+            cdls=self.target_cdl[ids]
+            cdlv.copy_(cdls)
+        else:
+            cdlv = None  
             
-        return xv,yv
+            
+        return xv,yv,cdlv
     
     def setids(self,randP=False):
         
@@ -90,11 +97,16 @@ class WingData(LatentData):
     
     def targetV(self,index):
         return self.target[index]
+    
+    def targetcdl(self,index):
+        return self.target_cdl[index]
         
 #%%      
 def loadAirfoilData(zdim=20,trainP=True,batchN=100,step=None,targetA=None):
     
     ys = loadWingProfiles(step=step,trainP=trainP,targetA=targetA)
+    cdls = ys[...,-2:]
+    ys = ys[...,:-2]
     ns = ys.shape[0]
     xs = floatTensor((ns,zdim))
     torch.nn.init.xavier_uniform_(xs)
@@ -105,8 +117,9 @@ def loadAirfoilData(zdim=20,trainP=True,batchN=100,step=None,targetA=None):
         if(ns < ys.shape[0]):
             xs = xs[0:ns]
             ys = ys[0:ns]
+            cdls = ys[0:ns]
 
-    return WingData(xs,ys,batchN=batchN)
+    return WingData(xs,ys,cdl=cdls,batchN=batchN)
 
 #dat=loadAirfoilData(zdim=10,batchN=100,trainP=True,step=11)
 #xs,ys = dat.batch(0)

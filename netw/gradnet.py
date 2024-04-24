@@ -226,7 +226,7 @@ class GradNet(nn.Module):
             data.shuffle()
             
         for batc in range(data.batchN):
-            inputsB,targetB,weightsB=data.batch(batc)
+            inputsB,targetB,weightsB,_=data.batch(batc)
             outputsB  = self(inputsB)
             lossB     = self.weigthedLoss(outputsB,targetB,weightsB)            
             loss     += lossB
@@ -268,7 +268,7 @@ class GradNet(nn.Module):
         
         with torch.no_grad():
             if(dataV is None):
-                currentLoss = self.computeLoss(dataT,optimizer=None,randP=False)               
+                currentLoss = self.computeLoss(dataT,optimizer=None,randP=False)      
             else:
                 currentLoss = self.computeLoss(dataV,optimizer=None,randP=False)
         if(minLoss is None):
