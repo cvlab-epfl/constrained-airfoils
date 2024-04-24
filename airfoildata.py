@@ -11,7 +11,6 @@ from netw.miscfuncs import dumpToFile,fromTensor,floatTensor,makeTensor,loadFrom
 from netw.netdata import NetData
 
 from auxfuncs import loadWingProfiles
-#xxx
 
 #%%---------------------------------------------------------------------------
 #                                Latent Vector Data
