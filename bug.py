@@ -6,21 +6,7 @@
 import torch
 
 from projarea    import AreaProjector
-from airfoildata import loadAirfoilData
-from auxfuncs    import netwDataName,currentDevice
-#%%---------------------------------------------------------------------------
-#                                Load Data
-#-----------------------------------------------------------------------------
-zdim=8
-step=25
-n1 = 16
-n2 = 32
-n3 = 16
-targetA= 0.1
-dataT = loadAirfoilData(zdim=zdim,batchN=100,trainP=True,step=step,targetA=targetA)
-ydim  = dataT.target.size(1)
-fName = netwDataName(zdim,n1,n2,n3)
-zs,xys0 = dataT.batch(0)
+from auxfuncs    import currentDevice
 #%%---------------------------------------------------------------------------
 #                            Train Autodecoder Alone
 #-----------------------------------------------------------------------------
@@ -62,7 +48,6 @@ def wingLodG(net,z):
     
     return grad
 
-#model = loadSurogateModel()
 z = torch.tensor([ 0.0149,  0.0232, -0.0196,  0.0356,  0.0021,  0.0252,  0.0184,  0.0410],requires_grad=True,device=currentDevice())
 wingLodF(net,z)
 wingLodG(net,z)
