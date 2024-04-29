@@ -176,9 +176,9 @@ def drawAirfoil(xs,color='-b'):
 #                                Data
 #-----------------------------------------------------------------------------
 
-def loadWingProfiles(step=None,trainP=True,targetA=None):
+def loadWingProfiles(step=None,trainP=True,targetA=None,cdl=False):
    
-    xys = np.load(wingDataName(trainP,targetA,step))
+    xys = np.load(wingDataName(trainP,targetA,step,cdl))
     
     if(targetA is None and step is not None):
         id1 = range(0,301,step)
@@ -196,7 +196,7 @@ def saveWingProfiles(xys,step=None,trainP=True,targetA=None):
     
     np.save(wingDataName(trainP,targetA,step),xys)
 
-def wingDataName(trainP,targetA,step):
+def wingDataName(trainP,targetA,step,cdl):
     
     if(trainP):
         bName = 'training'
@@ -204,9 +204,15 @@ def wingDataName(trainP,targetA,step):
         bName = 'testing'
         
     if(targetA):
-        fName = 'dat/{}-{}-{}.npy'.format(bName,step,targetA) 
+        if cdl:
+            fName = 'dat/{}-{}-{}-cdl.npy'.format(bName,step,targetA) 
+        else:
+            fName = 'dat/{}-{}-{}.npy'.format(bName,step,targetA) 
     else:
-        fName = 'dat/{}.npy'.format(bName) 
+        if cdl:
+            fName = 'dat/{}-cdl.npy'.format(bName)
+        else: 
+            fName = 'dat/{}.npy'.format(bName) 
         
     return fName
 

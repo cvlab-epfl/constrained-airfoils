@@ -26,8 +26,8 @@ n1 = 16
 n2 = 32
 n3 = 16
 targetA= 0.1
-dataT = loadAirfoilData(zdim=zdim,batchN=100,trainP=True,step=step,targetA=targetA)
-dataV = loadAirfoilData(zdim=zdim,batchN=1,trainP=False,step=step,targetA=targetA)
+dataT = loadAirfoilData(zdim=zdim,batchN=100,trainP=True,step=step,targetA=targetA,cdl=False)
+dataV = loadAirfoilData(zdim=zdim,batchN=1,trainP=False,step=step,targetA=targetA,cdl=False)
 ydim  = dataT.target.size(1)
 drawAirfoil(dataT.target[0])
 fName = netwDataName(zdim,n1,n2,n3)
@@ -35,7 +35,7 @@ fName = netwDataName(zdim,n1,n2,n3)
 #%%---------------------------------------------------------------------------
 #                            Train Autodecoder Alone
 #-----------------------------------------------------------------------------
-#%% 
+
 loadP = False
 net  = PerceptronDecoder(n1=n1,n2=n2,n3=n3,nIn=zdim,nOut=ydim,reluP=True)
 net.toGpu()
@@ -49,8 +49,7 @@ else:
     net.gtrain(dataT,fileName=fName, nIt=10000)
 #%%---------------------------------------------------------------------------
 #                          Train Autodecoder + Projector
-#-----------------------------------------------------------------------------
-#%%  
+#-----------------------------------------------------------------------------  
 loadP = False  
 fileName=netwDataName(zdim,n1,n2,n3,targetA) 
 dataT.restore(fName)
@@ -60,7 +59,7 @@ if(loadP):
 else:
     net.percept.restore(fName)
 net.toGpu()
-#%%
+
 if(loadP):
     zs,xys0 = dataT.batch(0)
     xys1=net(zs)
@@ -68,6 +67,7 @@ if(loadP):
         drawAirfoil(xys0[i],'-r')
         drawAirfoil(xys1[i],'-b')
         plt.pause(1.0)
+        
 #%% Train the AreaPorjector
 import warnings
 with warnings.catch_warnings():
@@ -77,7 +77,7 @@ with warnings.catch_warnings():
     dataZ = NetData(dataT.inputs(ids).detach(),dataT.target[0:ns].detach(),batchN=10)
     net.gtrain(dataZ,fileName=fileName, nIt=100)
 #%% Interpolate between two latent vectors
-zs,xys0 = dataT.batch(0)
+zs,xys0,_ = dataT.batch(0)
 i1  = 0
 i2  = 2
 z1  = zs[i1].view((1,-1))

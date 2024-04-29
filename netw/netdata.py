@@ -21,7 +21,7 @@ class NetData():
     def __init__(self,inp,out,cdl=None,ws=None,batchN=1,intP=False,name=None,loadP=False):
         
         if(loadP):
-            inp,out,ws=self.load(name)
+            inp,out,ws,cdl=self.load(name)
             
         self.batchN=batchN
         
@@ -44,7 +44,7 @@ class NetData():
         else:
             self.target=makeTensor(out)
             
-        if(out is None):
+        if(cdl is None):
             self.target_cdl=None
         elif(variableP(out)):
             self.target_cdl=cdl
@@ -147,8 +147,8 @@ class NetData():
         else:
             wv = None
             
-        if((self.target_cdl is not None) and ((i+self.batchL)<=self.os)):
-            cdlv=self.cdl
+        if((self.target_cdl is not None) and ((i+self.batchL)<=self.osdl)):
+            cdlv=self.cdlv
             cdls=self.target_cdl[i:i+self.batchL]
             cdlv.copy_(cdls)
         else:

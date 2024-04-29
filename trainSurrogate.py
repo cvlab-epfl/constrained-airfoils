@@ -3,20 +3,19 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import sys
-sys.path.append('../')
-from data import airfrans_to_deepsdf
 import numpy as np
 from airfoildata import loadAirfoilData, loadWingProfiles
 from auxfuncs    import drawAirfoil,netwDataName,shoelaceArea1
 from netw.miscfuncs import *
 from projarea   import  AreaProjector
 from decoder    import PerceptronDecoder
-from MLP import MLP
+from surrogate.MLP import MLP
+from surrogate.GraphSage import GraphSAGE
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 #%%---------------------------------------------------------------------------
-#                            Load Data
+#                            Load C_dl Data
 #-----------------------------------------------------------------------------
 
 zdim=8
@@ -26,78 +25,62 @@ n2 = 32
 n3 = 16
 targetA= 0.1
 
-dataT = loadAirfoilData(zdim=zdim,batchN=100,trainP=True,step=step,targetA=targetA)
-dataV = loadAirfoilData(zdim=zdim,batchN=1,trainP=False,step=step,targetA=targetA)
+dataT = loadAirfoilData(zdim=zdim,batchN=100,trainP=True,cdl=True)
+dataV = loadAirfoilData(zdim=zdim,batchN=11,trainP=False,cdl=True)
 
 ydim  = dataT.target.size(1)
 drawAirfoil(dataT.target[1])
 fName = netwDataName(zdim,n1,n2,n3)
 
 #%%---------------------------------------------------------------------------
-#                            Train Autodecoder Alone
+#                            Train/Load MLP/GNN Surrogate
 #-----------------------------------------------------------------------------
+
 loadP = True
-net  = PerceptronDecoder(n1=n1,n2=n2,n3=n3,nIn=zdim,nOut=ydim,reluP=True)
-net.toGpu()
-if(loadP):
-    # Restore from file
-    net.restore(fName)
-    dataT.restore(fName)
-    dataT.setids(randP=False)
+predict_lod = True  # Predicts directly de lift over drag if true, otherwise predicts both drag and lift coefficients
+model = 'mlp' # Surrogate's architecture, should be "mlp" or "gnn"
+
+model = MLP(predict_lod).to(device) if model == "mlp" else GraphSAGE(predict_lod).to(device)
+            
+if loadP:
+    model.restore()
 else:
-    # Train network
-    net.gtrain(dataT,fileName=fName, nIt=10000)
+    model.gtrain(dataT, dataV, predict_lod)
+    
+wings = dataV.target
+cdl = dataV.target_cdl
+for i in range(10):
+    if predict_lod:
+        print("Lift over Drag prediction:", "{:.3f}".format(model(wings[i:i+1]).item()), "GT", "{:.3f}".format(cdl[i:i+1,1].item()/cdl[i:i+1,0].item()))
+    else:
+        out = model(wings[i:i+1])
+        print("Drag", "{:.3f}".format(out[:,0].item()), "GT", "{:.3f}".format(cdl[i:i+1,0].item()), "Lift", "{:.3f}".format(out[:,1].item()), "GT", "{:.3f}".format(cdl[i:i+1,1].item()), "Lift over Drag:", "{:.3f}".format(out[:,1].item()/out[:,0].item()), "GT", "{:.3f}".format(cdl[i:i+1,1].item()/cdl[i:i+1,0].item()))
 
 #%%---------------------------------------------------------------------------
-#                            Train MLP Surrogate Alone
+#                            Test on wings.npy
 #-----------------------------------------------------------------------------
-# %%
+wings = np.load("dat/wings.npy")
+wings = makeTensor(wings.reshape((-1,54)))
+for i in range(10):
+    if predict_lod:
+        print("Lift over Drag:", "{:.3f}".format(model(wings[i:i+1]).item()))
+    else:
+        out = model(wings[i:i+1])
+        print("Drag", "{:.3f}".format(out[:,0].item()), "Lift", "{:.3f}".format(out[:,1].item()), "Lift over Drag:", "{:.3f}".format(out[:,1].item()/out[:,0].item()))
 
+#%%---------------------------------------------------------------------------
+#                            Load AreaProjector and Shape Data
+#-----------------------------------------------------------------------------
 loadP = True
-model = MLP().to(device)
+net  = AreaProjector(n1=n1,n2=n2,n3=n3,nIn=zdim,nOut=ydim)
+net.toGpu()
+# Restore from file
+net.restore(fName)
 
-if(loadP):
-    model.load_state_dict(torch.load("mlp_state_dict.pth"))
-else:
-    lr = 1e-4
-    NEPOCHS = 5000
-
-    loss_fn = nn.L1Loss()  # mean square error
-    optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=1e-4)
-    scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=lr, steps_per_epoch=int(dataT.batchN*0.8), epochs=NEPOCHS)
-    best_score = np.inf
-
-    for epoch in range(NEPOCHS):
-        model.train()
-        running_loss = []
-        for bat in range(np.int32(dataT.batchN*0.9)):
-            inputT, targetT, cdlT = dataT.batch(bat)
-            targetV += (0.00001**0.5)*torch.randn(targetV.shape).to(device)
-            y = model(targetT)
-            loss = loss_fn(y, cdlT)
-            loss.backward()
-            optimizer.step()
-            running_loss.append(loss.item())
-            
-        scheduler.step()
-        
-        if (epoch+1)%100==0:        
-            model.eval()
-            test_loss = []
-            with torch.no_grad():
-                for bat in range(np.int32(dataT.batchN*0.9),dataT.batchN):
-                    inputV, targetV, cdlV = dataT.batch(bat)
-                    y = model(targetV)
-                    loss = loss_fn(y, cdlV)
-                    test_loss.append(loss.item())
-
-                print(epoch, np.mean(running_loss), np.mean(test_loss))
-                
-            if np.mean(test_loss)<best_score:
-                best_score = np.mean(test_loss)
-                best_state_dict = model.state_dict()
-                
-    torch.save(best_state_dict, "mlp_state_dict.pth")
+dataT = loadAirfoilData(zdim=zdim,batchN=100,trainP=True,step=step,targetA=targetA,cdl=False)
+dataV = loadAirfoilData(zdim=zdim,batchN=11,trainP=False,step=step,targetA=targetA,cdl=False)
+dataT.restore(fName)
+dataT.setids(randP=False)
 
 #%%---------------------------------------------------------------------------
 #                            Test MLP Grad Smoothness
@@ -105,7 +88,6 @@ else:
 zs,xys0,cdl = dataT.batch(0)
 z1 = zs.clone().detach().to(device)[0]
 zt = makeTensor(z1).view((1,-1)).to(device)
-print(z1.shape, zt.shape)
 j  = 7
 xj = z1[j]
 nx = 100
@@ -117,10 +99,11 @@ for i,dx in enumerate(np.linspace(-0.05,0.05,100)):
     
     zt[0,j] =  xs[i]   = xj + dx
     xy      = net(zt)
-    cd, cl  = model(xy)[0]
-    lod     = cl / cd
+    lod  = model(xy)
+    if not predict_lod:
+        lod = lod[:,1]/lod[:,0]
+    # lod     = cl / cd
     # lod     = cd
-    
     ys[i]   = lod.item()
     
     if(0 == (i%10)):
@@ -129,46 +112,52 @@ for i,dx in enumerate(np.linspace(-0.05,0.05,100)):
 
 plt.plot(xs,ys)    
 
+
 #%%---------------------------------------------------------------------------
 #                                Run Optimization
 #-----------------------------------------------------------------------------
-z = zs.clone().detach().to(device).requires_grad_(True)
-loss_l1 = torch.nn.L1Loss()
-optimizer = torch.optim.Adam([z], lr=0.001)
-z_init = zs.clone().detach().to(device)
+for i in range(10):
+    zs,xys0,cdl = dataT.batch(i)
+    z = zs.clone().detach().to(device).requires_grad_(True)
+    loss_l1 = torch.nn.L1Loss()
+    optimizer = torch.optim.Adam([z], lr=0.001)
+    z_init = zs.clone().detach().to(device)
+    max_epochs = 1000
 
-max_epochs = 1000
-for e in range(max_epochs):
-    xy1 = net(z[0]).to(device)
-    cd, cl = model(xy1)
-    # cd, cl = cdl[:,0], cdl[:,1]
-    if e==0:
-        print("Initial cd:", cd.item(), "cl:", cl.item(), "Lift over drag:", (cl/cd).item())
-    print(100*e/max_epochs, "%", end='\r')
-    lod = cd / cl
-    loss = loss_l1(lod, torch.tensor([0], device=device))
-    loss_z = loss_l1(z, z_init)
-    loss += 1.0*loss_z
-    loss.backward()
-    # grad = z.grad
-    # print(grad)
-    optimizer.step()
-    optimizer.zero_grad()
-    
-print("Final cd:", cd.item(), "cl:", cl.item(), "Lift over drag:", (cl/cd).item())
+    for e in range(max_epochs):
+        xy1 = net(z[:1]).to(device)
+        lod = model(xy1)
+        if not predict_lod:
+            lod = lod[:,1]/lod[:,0]
+        # cd, cl = cdl[:,0], cdl[:,1]
+        if e==0:
+            print("Initial Lift over drag:", lod.item())
+        print(100*e/max_epochs, "%", end='\r')
+        loss = loss_l1(1/lod, torch.zeros_like(lod, device=device))
+        loss_z = loss_l1(z, z_init)
+        loss += 1.0*loss_z
+        loss.backward()
+        # grad = z.grad
+        # print(grad)
+        optimizer.step()
+        optimizer.zero_grad()
+        
+    print("Final Lift over drag:", lod.item())
 
-xy1 = net(z_init).view((-1,2)).to(device)
-airfoils = xy1.reshape(z.shape[0], xy1.shape[0]//z.shape[0], 2)
-drawAirfoil(airfoils[0])
-xy1 = net(z).view((-1,2)).to(device)
-airfoils = xy1.reshape(z.shape[0], xy1.shape[0]//z.shape[0], 2)
-drawAirfoil(airfoils[0],color='-r')
+    fig = plt.plot()
+    xy1 = net(z_init).view((-1,2)).to(device)
+    airfoils = xy1.reshape(z.shape[0], xy1.shape[0]//z.shape[0], 2)
+    drawAirfoil(airfoils[0])
+    xy1 = net(z).view((-1,2)).to(device)
+    airfoils = xy1.reshape(z.shape[0], xy1.shape[0]//z.shape[0], 2)
+    drawAirfoil(airfoils[0],color='-r')
+    plt.show()
 
 #%%---------------------------------------------------------------------------
 #                            Test MLP Grads vs Finite-Diff.
 #-----------------------------------------------------------------------------
 # 
-# dbgP=False
+dbgP=False
     
 def stiffnessF(K,xy1):
     
@@ -204,9 +193,7 @@ def wingLodF(net,z,model=None,K=None):
     if(dbgP):
         lod = torch.sum(xy1.view((-1,2))[:,0]*xy1.view((-1,2))[:,1])
     else:
-        cdl = model(xy1)
-        cd, cl = cdl[:,0], cdl[:,1]
-        lod    = cd
+        lod = model(xy1)
         
     #print(cd.size(),cl.size())
     
@@ -248,3 +235,4 @@ objG(z0)
 # print(g)
 
 tstG(objF,objG,z0,1e-4)
+# %%
