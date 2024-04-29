@@ -15,7 +15,7 @@ from ddn.pytorch.node import EqConstDeclarativeNode,DeclarativeLayer
 from netw.gradnet     import GradNet
 
 from decoder  import PerceptronDecoder
-from auxfuncs import fromTensor,currentDevice,shoelaceArea1,shoelaceAreaF,affTrf,batchShoelaceArea
+from auxfuncs import fromTensor,currentDevice,shoelaceAreaF,shoelaceAreaG,affTrf,batchShoelaceArea
 from auxfuncs import loadWingProfiles,drawAirfoil
 #%%
 class AreaProjector(GradNet):
@@ -55,7 +55,10 @@ if __name__ == "__main__":
 #%%
 def affPrjWing(xy,targetA,drawP=False):
     
+    assert(2==xy.shape[1])
+    
     xy0 = xy.copy()
+    n0  = xy0.shape[0]
     
     def objF(aff):
         
@@ -63,19 +66,72 @@ def affPrjWing(xy,targetA,drawP=False):
         d01 = xy0-xy1
         return 0.5*np.sum(d01*d01)
     
+    def objG(aff):
+        
+        xy1    = affTrf(aff,xy0)
+        x0     = xy0[:,0]
+        y0     = xy0[:,1]
+        
+        dF_dxy = (xy1-xy0).flatten()
+        
+        dxy_dA = np.zeros((6,n0*2),dtype=np.float32)
+        idsx   = np.arange(0,n0*2,2)
+        idsy   = idsx+1
+        dxy_dA[0,idsx] = x0
+        dxy_dA[1,idsx] = y0
+        dxy_dA[2,idsy] = x0
+        dxy_dA[3,idsy] = y0
+        dxy_dA[4,idsx] = 1.0
+        dxy_dA[5,idsy] = 1.0
+        
+        J = dxy_dA  @ dF_dxy
+        g = J.flatten()
+        
+        return g
+        
     def cstF(aff):
         
         xy1 = affTrf(aff,xy0)
         return shoelaceAreaF(xy1)-targetA
+    
+    def cstG(aff):
+            
+        xy1    = affTrf(aff,xy0)
+        x0     = xy0[:,0]
+        y0     = xy0[:,1]
         
+        dF_dxy = shoelaceAreaG(xy1).flatten()   
+        dxy_dA = np.zeros((4,n0*2),dtype=np.float32)
+        idsx   = np.arange(0,n0*2,2)
+        idsy   = idsx+1
+        dxy_dA[0,idsx] = x0
+        dxy_dA[1,idsx] = y0
+        dxy_dA[2,idsy] = x0
+        dxy_dA[3,idsy] = y0
+        
+        J = dxy_dA  @ dF_dxy
+        
+        g = np.zeros(6,dtype=np.float32)
+        g[0:4] = J.flatten()
+       
+        return g
+    
     aff0 = np.array(([1.0,0.0,0.0,1.0,0.0,0.0]),dtype=np.float32)
-    cons = ({'type': 'eq', 'fun': cstF})
+    cons = ({'type': 'eq', 'fun': cstF, 'jac': cstG})
     bnds = opt.Bounds(-100.0,100.0,keep_feasible=True)
     
-    res =  opt.minimize(objF,aff0,method='SLSQP',constraints=cons,bounds=bnds)
+    # aff0 += 0.7*np.random.randn(6)
+    # tstG(objF,objG,aff0,1e-6)
+    # return
+    
+    #aff0 += 0.7*np.random.randn(6)
+    #tstG(cstF,cstJ,aff0,1e-6)
+    # return
+    
+    res =  opt.minimize(objF,aff0,method='SLSQP',constraints=cons,bounds=bnds,jac=objG)
     
     if(not(res.success)):
-        print('affPrjWing(: Minimization failed')
+        print('affPrjWing(: Minimization failed.')
       
     # Return the deformed contour
     aff1 = res.x

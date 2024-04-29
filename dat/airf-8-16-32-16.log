@@ -31,3 +31,13 @@
 02-21 15:53:41|INFO   | [   0] current loss: 1.586e-04 min loss: 1.586e-04
 02-21 15:54:50|INFO   | [   2] current loss: 1.587e-04 min loss: 1.586e-04
 02-21 15:54:50|INFO   | Finished Training
+04-29 03:14:09|INFO   | Log file dat/airf-8-16-32-16.log initialized
+04-29 03:14:11|INFO   | [   0] current loss: 2.056e-01 min loss: 2.056e-01
+04-29 03:16:53|INFO   | [ 100] current loss: 1.873e-04 min loss: 2.056e-01
+04-29 03:19:34|INFO   | [ 200] current loss: 1.841e-04 min loss: 1.873e-04
+04-29 03:22:16|INFO   | [ 300] current loss: 1.809e-04 min loss: 1.841e-04
+04-29 03:24:58|INFO   | [ 400] current loss: 1.612e-04 min loss: 1.809e-04
+04-29 03:26:25|INFO   | Log file dat/airf-8-16-32-16.log initialized
+04-29 03:26:26|INFO   | [   0] current loss: 2.284e-01 min loss: 2.284e-01
+04-29 03:29:56|INFO   | Log file dat/airf-8-16-32-16.log initialized
+04-29 03:29:57|INFO   | [   0] current loss: 2.039e-01 min loss: 2.039e-01
