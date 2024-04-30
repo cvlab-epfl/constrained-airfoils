@@ -139,7 +139,6 @@ def batchShoelaceArea(points):
 #                               Affine Transform
 #-----------------------------------------------------------------------------
 
-# Affine deformation of a set of points
 def affTrf(aff,xy):
     
     if(torch.is_tensor(aff)):
@@ -160,15 +159,31 @@ def affTrf(aff,xy):
     
     return xy @ A.T + b
 
+def batchAffTrf(xys,sigA,sigT):
+    
+   batchL=xys.size(0) 
+
+   aff  = torch.zeros((batchL,6),device=xys.device,dtype=xys.dtype)
+   aff[:,0]=aff[:,3]=1.0
+   if(sigA>0.0):
+       aff[:,0:4] += sigA*torch.randn((batchL,4),device=aff.device)
+   if(sigT>0.0):
+       aff[:,4:6] += sigT*torch.randn((batchL,2),device=aff.device)
+   A    = aff[:,0:4].view((-1,2,2))
+   b    = aff[:,4:6]
+   xys = torch.bmm(xys.view(batchL,-1,2),A)
+   xys = xys + b.view((batchL,1,-1))
+   return xys.view((batchL,-1))
+
 #%%---------------------------------------------------------------------------
 #                                Display
 #-----------------------------------------------------------------------------
 
-def drawAirfoil(xs,color='-b'):
+def drawAirfoil(xs,color='-b',label=None):
        
     xs=fromTensor(xs)
     xy=xs.reshape((-1,2))    
-    plt.plot(xy[:,0],xy[:,1],color)[0]
+    plt.plot(xy[:,0],xy[:,1],color,label=label)
     plt.gca().axis('equal')
 
 

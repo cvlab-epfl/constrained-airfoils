@@ -7,10 +7,10 @@ import numpy as np
 import random
 
 import torch
-from netw.miscfuncs import dumpToFile,fromTensor,floatTensor,makeTensor,loadFromFile
-from netw.netdata import NetData
+from util import dumpToFile,fromTensor,floatTensor,makeTensor,loadFromFile
+from nets import NetData
 
-from auxfuncs import loadWingProfiles
+from auxfuncs import loadWingProfiles,batchAffTrf
 
 #%%---------------------------------------------------------------------------
 #                                Latent Vector Data
@@ -18,18 +18,22 @@ from auxfuncs import loadWingProfiles
 #%%        
 class LatentData(NetData):
     
-    def __init__(self,inp,out,batchN=1):
+    def __init__(self,inp,out,batchN=1,sigN=0,sigA=0.1,sigT=0.02):
         
         super(LatentData, self).__init__(inp,out,batchN=batchN)
+        # Not too many noisy samples.
+        assert(sigN<self.batchL) 
         
         self.setids(randP=False)
+        self.sigN = sigN
+        self.sigA = sigA
+        self.sigT = sigT
         
         ns,nf       = self.inputs.size()
         latentZs    = torch.nn.Embedding(ns,nf,device=self.inputs.device)
         tensorToEmbedding(self.inputs,latentZs)
         
-        #
-        self.inputs = latentZs #latentZs(idx)
+        self.inputs = latentZs
         
     def latent(self):
         
@@ -54,7 +58,16 @@ class LatentData(NetData):
             ys=self.target[ids]
             yv.copy_(ys)
         else:
-            yv = None       
+            yv = None   
+         
+        # Add noise to the first N samples
+        sigN = self.sigN 
+        if(sigN>0):
+            sigA = self.sigA 
+            sigT = self.sigT
+            xys  = yv[0:sigN,:]
+            xys  = batchAffTrf(xys,sigA,sigT)
+            yv[0:sigN,:] = xys
             
         return xv,yv
     
@@ -92,7 +105,7 @@ class WingData(LatentData):
         return self.target[index]
         
 #%%      
-def loadAirfoilData(zdim=20,trainP=True,batchN=100,step=None,targetA=None):
+def loadAirfoilData(zdim=20,trainP=True,batchN=100,step=None,targetA=None,sigN=0,sigA=0.1,sigT=0.02):
     
     ys = loadWingProfiles(step=step,trainP=trainP,targetA=targetA)
     ns = ys.shape[0]
@@ -106,7 +119,7 @@ def loadAirfoilData(zdim=20,trainP=True,batchN=100,step=None,targetA=None):
             xs = xs[0:ns]
             ys = ys[0:ns]
 
-    return WingData(xs,ys,batchN=batchN)
+    return WingData(xs,ys,batchN=batchN,sigN=sigN,sigA=sigA,sigT=sigT)
 
 #dat=loadAirfoilData(zdim=10,batchN=100,trainP=True,step=11)
 #xs,ys = dat.batch(0)

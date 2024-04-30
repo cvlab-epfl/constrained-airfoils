@@ -1,43 +1,116 @@
-02-21 14:48:28|INFO   | Log file dat/airf-8-16-32-16.log initialized
-02-21 14:48:29|INFO   | [   0] current loss: 1.982e-01 min loss: 1.982e-01
-02-21 14:50:34|INFO   | [ 100] current loss: 1.863e-04 min loss: 1.982e-01
-02-21 14:52:41|INFO   | Log file dat/airf-8-16-32-16-0.1.log initialized
-02-21 14:52:44|INFO   | [   0] current loss: 1.633e-04 min loss: 1.633e-04
-02-21 14:54:55|INFO   | Log file dat/airf-8-16-32-16.log initialized
-02-21 14:54:57|INFO   | [   0] current loss: 2.128e-01 min loss: 2.128e-01
-02-21 14:57:11|INFO   | [ 100] current loss: 1.819e-04 min loss: 2.128e-01
-02-21 15:22:04|INFO   | Log file dat/airf-8-16-32-16.log initialized
-02-21 15:22:04|INFO   | [   0] current loss: 1.923e-01 min loss: 1.923e-01
-02-21 15:22:36|INFO   | [ 100] current loss: 1.750e-04 min loss: 1.923e-01
-02-21 15:23:10|INFO   | [ 200] current loss: 8.051e-05 min loss: 1.750e-04
-02-21 15:23:42|INFO   | [ 300] current loss: 4.194e-05 min loss: 8.051e-05
-02-21 15:24:15|INFO   | [ 400] current loss: 3.467e-05 min loss: 4.194e-05
-02-21 15:24:45|INFO   | [ 500] current loss: 2.755e-05 min loss: 3.467e-05
-02-21 15:25:15|INFO   | [ 600] current loss: 1.934e-05 min loss: 2.755e-05
-02-21 15:25:46|INFO   | [ 700] current loss: 1.490e-05 min loss: 1.934e-05
-02-21 15:26:17|INFO   | [ 800] current loss: 1.221e-05 min loss: 1.490e-05
-02-21 15:26:48|INFO   | [ 900] current loss: 1.128e-05 min loss: 1.221e-05
-02-21 15:27:18|INFO   | [1000] current loss: 9.754e-06 min loss: 1.128e-05
-02-21 15:27:18|INFO   | Finished Training
-02-21 15:27:49|INFO   | Log file dat/airf-8-16-32-16-0.1.log initialized
-02-21 15:27:55|INFO   | [   0] current loss: 1.111e-05 min loss: 1.111e-05
-02-21 15:30:26|INFO   | Log file dat/airf-8-16-32-16.log initialized
-02-21 15:30:26|INFO   | [   0] current loss: 2.279e-01 min loss: 2.279e-01
-02-21 15:30:59|INFO   | [ 100] current loss: 1.835e-04 min loss: 2.279e-01
-02-21 15:30:59|INFO   | Finished Training
-02-21 15:30:59|INFO   | Log file dat/airf-8-16-32-16-0.1.log initialized
-02-21 15:31:05|INFO   | [   0] current loss: 1.599e-04 min loss: 1.599e-04
-02-21 15:53:36|INFO   | Log file dat/airf-8-16-32-16-0.1.log initialized
-02-21 15:53:41|INFO   | [   0] current loss: 1.586e-04 min loss: 1.586e-04
-02-21 15:54:50|INFO   | [   2] current loss: 1.587e-04 min loss: 1.586e-04
-02-21 15:54:50|INFO   | Finished Training
-04-29 03:14:09|INFO   | Log file dat/airf-8-16-32-16.log initialized
-04-29 03:14:11|INFO   | [   0] current loss: 2.056e-01 min loss: 2.056e-01
-04-29 03:16:53|INFO   | [ 100] current loss: 1.873e-04 min loss: 2.056e-01
-04-29 03:19:34|INFO   | [ 200] current loss: 1.841e-04 min loss: 1.873e-04
-04-29 03:22:16|INFO   | [ 300] current loss: 1.809e-04 min loss: 1.841e-04
-04-29 03:24:58|INFO   | [ 400] current loss: 1.612e-04 min loss: 1.809e-04
-04-29 03:26:25|INFO   | Log file dat/airf-8-16-32-16.log initialized
-04-29 03:26:26|INFO   | [   0] current loss: 2.284e-01 min loss: 2.284e-01
-04-29 03:29:56|INFO   | Log file dat/airf-8-16-32-16.log initialized
-04-29 03:29:57|INFO   | [   0] current loss: 2.039e-01 min loss: 2.039e-01
+01-29 14:42:27|INFO   | Log file dat/airf-8-16-32-16.log initialized
+01-29 14:42:27|INFO   | [   0] current loss: 2.219e-01 min loss: 2.219e-01
+01-29 14:44:28|INFO   | [ 100] current loss: 1.768e-04 min loss: 2.219e-01
+01-29 14:46:28|INFO   | [ 200] current loss: 1.670e-04 min loss: 1.768e-04
+01-29 14:48:28|INFO   | [ 300] current loss: 9.782e-05 min loss: 1.670e-04
+01-29 14:50:28|INFO   | [ 400] current loss: 5.697e-05 min loss: 9.782e-05
+01-29 14:52:28|INFO   | [ 500] current loss: 4.263e-05 min loss: 5.697e-05
+01-29 14:54:27|INFO   | [ 600] current loss: 3.692e-05 min loss: 4.263e-05
+01-29 14:56:27|INFO   | [ 700] current loss: 3.314e-05 min loss: 3.692e-05
+01-29 14:58:27|INFO   | [ 800] current loss: 2.954e-05 min loss: 3.314e-05
+01-29 15:00:27|INFO   | [ 900] current loss: 2.637e-05 min loss: 2.954e-05
+01-29 15:02:27|INFO   | [1000] current loss: 2.326e-05 min loss: 2.637e-05
+01-29 15:04:26|INFO   | [1100] current loss: 2.028e-05 min loss: 2.326e-05
+01-29 15:06:25|INFO   | [1200] current loss: 1.727e-05 min loss: 2.028e-05
+01-29 15:08:24|INFO   | [1300] current loss: 1.494e-05 min loss: 1.727e-05
+01-29 15:10:23|INFO   | [1400] current loss: 1.300e-05 min loss: 1.494e-05
+01-29 15:12:21|INFO   | [1500] current loss: 1.160e-05 min loss: 1.300e-05
+01-29 15:14:20|INFO   | [1600] current loss: 1.110e-05 min loss: 1.160e-05
+01-29 15:16:18|INFO   | [1700] current loss: 9.735e-06 min loss: 1.110e-05
+01-29 15:18:17|INFO   | [1800] current loss: 9.453e-06 min loss: 9.735e-06
+01-29 15:20:15|INFO   | [1900] current loss: 9.157e-06 min loss: 9.453e-06
+01-29 15:22:14|INFO   | [2000] current loss: 8.916e-06 min loss: 9.157e-06
+01-29 15:24:23|INFO   | [2100] current loss: 8.878e-06 min loss: 8.916e-06
+01-29 15:26:39|INFO   | [2200] current loss: 8.665e-06 min loss: 8.878e-06
+01-29 15:28:53|INFO   | [2300] current loss: 8.777e-06 min loss: 8.665e-06
+01-29 15:31:09|INFO   | [2400] current loss: 8.704e-06 min loss: 8.665e-06
+01-29 15:33:24|INFO   | [2500] current loss: 8.561e-06 min loss: 8.665e-06
+01-29 15:35:41|INFO   | [2600] current loss: 8.520e-06 min loss: 8.561e-06
+01-29 15:37:57|INFO   | [2700] current loss: 8.499e-06 min loss: 8.520e-06
+01-29 15:40:12|INFO   | [2800] current loss: 8.409e-06 min loss: 8.499e-06
+01-29 15:42:10|INFO   | [2900] current loss: 8.399e-06 min loss: 8.409e-06
+01-29 15:44:27|INFO   | [3000] current loss: 8.193e-06 min loss: 8.399e-06
+01-29 15:46:45|INFO   | [3100] current loss: 7.977e-06 min loss: 8.193e-06
+01-29 15:49:00|INFO   | [3200] current loss: 7.784e-06 min loss: 7.977e-06
+01-29 15:51:19|INFO   | [3300] current loss: 7.566e-06 min loss: 7.784e-06
+01-29 15:53:31|INFO   | [3400] current loss: 7.375e-06 min loss: 7.566e-06
+01-29 15:55:42|INFO   | [3500] current loss: 7.276e-06 min loss: 7.375e-06
+01-29 15:57:42|INFO   | [3600] current loss: 6.993e-06 min loss: 7.276e-06
+01-29 15:59:44|INFO   | [3700] current loss: 6.938e-06 min loss: 6.993e-06
+01-29 16:01:47|INFO   | [3800] current loss: 6.835e-06 min loss: 6.938e-06
+01-29 16:03:47|INFO   | [3900] current loss: 6.871e-06 min loss: 6.835e-06
+01-29 16:05:47|INFO   | [4000] current loss: 6.827e-06 min loss: 6.835e-06
+01-29 16:07:47|INFO   | [4100] current loss: 6.742e-06 min loss: 6.827e-06
+01-29 16:09:47|INFO   | [4200] current loss: 6.696e-06 min loss: 6.742e-06
+01-29 16:11:48|INFO   | [4300] current loss: 6.740e-06 min loss: 6.696e-06
+01-29 16:13:48|INFO   | [4400] current loss: 6.625e-06 min loss: 6.696e-06
+01-29 16:15:48|INFO   | [4500] current loss: 6.645e-06 min loss: 6.625e-06
+01-29 16:17:47|INFO   | [4600] current loss: 6.580e-06 min loss: 6.625e-06
+01-29 16:19:47|INFO   | [4700] current loss: 6.610e-06 min loss: 6.580e-06
+01-29 16:21:46|INFO   | [4800] current loss: 6.657e-06 min loss: 6.580e-06
+01-29 16:23:46|INFO   | [4900] current loss: 6.571e-06 min loss: 6.580e-06
+01-29 16:25:46|INFO   | [5000] current loss: 6.510e-06 min loss: 6.571e-06
+01-29 16:27:45|INFO   | [5100] current loss: 6.559e-06 min loss: 6.510e-06
+01-29 16:29:45|INFO   | [5200] current loss: 6.666e-06 min loss: 6.510e-06
+01-29 16:31:45|INFO   | [5300] current loss: 6.568e-06 min loss: 6.510e-06
+01-29 16:33:45|INFO   | [5400] current loss: 6.605e-06 min loss: 6.510e-06
+01-29 16:35:45|INFO   | [5500] current loss: 6.516e-06 min loss: 6.510e-06
+01-29 16:37:44|INFO   | [5600] current loss: 6.538e-06 min loss: 6.510e-06
+01-29 16:39:44|INFO   | [5700] current loss: 6.599e-06 min loss: 6.510e-06
+01-29 16:41:44|INFO   | [5800] current loss: 6.592e-06 min loss: 6.510e-06
+01-29 16:43:44|INFO   | [5900] current loss: 6.697e-06 min loss: 6.510e-06
+01-29 16:45:44|INFO   | [6000] current loss: 6.482e-06 min loss: 6.510e-06
+01-29 16:47:48|INFO   | [6100] current loss: 6.688e-06 min loss: 6.482e-06
+01-29 16:49:55|INFO   | [6200] current loss: 6.449e-06 min loss: 6.482e-06
+01-29 16:52:02|INFO   | [6300] current loss: 6.494e-06 min loss: 6.449e-06
+01-29 16:54:09|INFO   | [6400] current loss: 6.579e-06 min loss: 6.449e-06
+01-29 16:56:17|INFO   | [6500] current loss: 6.518e-06 min loss: 6.449e-06
+01-29 16:58:25|INFO   | [6600] current loss: 6.500e-06 min loss: 6.449e-06
+01-29 17:00:32|INFO   | [6700] current loss: 6.533e-06 min loss: 6.449e-06
+01-29 17:02:50|INFO   | [6800] current loss: 6.487e-06 min loss: 6.449e-06
+01-29 17:05:08|INFO   | [6900] current loss: 6.583e-06 min loss: 6.449e-06
+01-29 17:07:26|INFO   | [7000] current loss: 6.443e-06 min loss: 6.449e-06
+01-29 17:09:42|INFO   | [7100] current loss: 6.472e-06 min loss: 6.443e-06
+01-29 17:11:58|INFO   | [7200] current loss: 6.567e-06 min loss: 6.443e-06
+01-29 17:14:15|INFO   | [7300] current loss: 6.437e-06 min loss: 6.443e-06
+01-29 17:16:31|INFO   | [7400] current loss: 6.489e-06 min loss: 6.437e-06
+01-29 17:18:47|INFO   | [7500] current loss: 6.525e-06 min loss: 6.437e-06
+01-29 17:21:03|INFO   | [7600] current loss: 6.453e-06 min loss: 6.437e-06
+01-29 17:23:19|INFO   | [7700] current loss: 6.424e-06 min loss: 6.437e-06
+01-29 17:25:35|INFO   | [7800] current loss: 6.420e-06 min loss: 6.424e-06
+01-29 17:27:52|INFO   | [7900] current loss: 6.511e-06 min loss: 6.420e-06
+01-29 17:30:08|INFO   | [8000] current loss: 6.410e-06 min loss: 6.420e-06
+01-29 17:32:25|INFO   | [8100] current loss: 6.395e-06 min loss: 6.410e-06
+01-29 17:37:22|INFO   | [8200] current loss: 6.416e-06 min loss: 6.395e-06
+01-29 18:15:31|INFO   | [8300] current loss: 6.455e-06 min loss: 6.395e-06
+01-29 18:17:42|INFO   | [8400] current loss: 6.453e-06 min loss: 6.395e-06
+01-29 18:48:37|INFO   | Log file dat/foo.log initialized
+01-29 20:26:14|INFO   | Log file dat/foo.log initialized
+01-29 20:28:13|INFO   | Log file dat/foo.log initialized
+01-29 20:28:26|INFO   | Log file dat/foo.log initialized
+01-29 20:28:26|INFO   | [   0] current loss: 5.387e-06 min loss: 5.387e-06
+01-29 20:32:05|INFO   | Log file dat/foo.log initialized
+01-29 20:32:05|INFO   | [   0] current loss: 6.583e-06 min loss: 6.583e-06
+01-29 20:53:47|INFO   | [ 100] current loss: 5.301e-06 min loss: 6.583e-06
+01-29 21:15:39|INFO   | [ 200] current loss: 5.064e-06 min loss: 5.301e-06
+01-29 21:37:23|INFO   | [ 300] current loss: 4.767e-06 min loss: 5.064e-06
+01-29 21:59:30|INFO   | [ 400] current loss: 4.556e-06 min loss: 4.767e-06
+01-29 22:12:33|INFO   | Log file dat/bar.log initialized
+01-29 22:12:36|INFO   | [   0] current loss: 4.960e-06 min loss: 4.960e-06
+01-30 12:22:21|INFO   | [ 100] current loss: 4.501e-06 min loss: 4.960e-06
+01-30 18:19:54|INFO   | [ 200] current loss: 4.283e-06 min loss: 4.501e-06
+01-31 00:41:08|INFO   | [ 300] current loss: 4.084e-06 min loss: 4.283e-06
+01-31 05:08:31|INFO   | [ 400] current loss: 3.949e-06 min loss: 4.084e-06
+01-31 09:57:02|INFO   | [ 500] current loss: 3.825e-06 min loss: 3.949e-06
+01-31 14:36:01|INFO   | [ 600] current loss: 3.726e-06 min loss: 3.825e-06
+01-31 18:27:50|INFO   | [ 700] current loss: 3.671e-06 min loss: 3.726e-06
+02-01 00:02:10|INFO   | [ 800] current loss: 3.576e-06 min loss: 3.671e-06
+02-01 03:34:40|INFO   | [ 900] current loss: 3.544e-06 min loss: 3.576e-06
+02-01 07:08:06|INFO   | [1000] current loss: 3.510e-06 min loss: 3.544e-06
+02-01 11:28:08|INFO   | [1100] current loss: 3.505e-06 min loss: 3.510e-06
+02-01 15:07:15|INFO   | [1200] current loss: 3.458e-06 min loss: 3.505e-06
+02-01 22:07:52|INFO   | [1300] current loss: 3.467e-06 min loss: 3.458e-06
+02-02 01:54:44|INFO   | [1400] current loss: 3.433e-06 min loss: 3.458e-06
+02-02 06:42:40|INFO   | [1500] current loss: 3.428e-06 min loss: 3.433e-06
+02-02 11:16:56|INFO   | [1600] current loss: 3.442e-06 min loss: 3.428e-06
+02-02 14:55:43|INFO   | [1700] current loss: 3.403e-06 min loss: 3.428e-06

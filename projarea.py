@@ -12,17 +12,20 @@ import torch.nn as nn
 
 from ddn.pytorch.node import EqConstDeclarativeNode,DeclarativeLayer
 
-from netw.gradnet     import GradNet
+from util     import fromTensor,currentDevice
+from nets     import GradNet
 
 from decoder  import PerceptronDecoder
-from auxfuncs import fromTensor,currentDevice,shoelaceAreaF,shoelaceAreaG,affTrf,batchShoelaceArea
+from auxfuncs import shoelaceAreaF,shoelaceAreaG,affTrf,batchShoelaceArea
 from auxfuncs import loadWingProfiles,drawAirfoil
+
+from optim import tstG
 #%%
 class AreaProjector(GradNet):
     
     lossFunction = nn.MSELoss()
     
-    def __init__(self,n1=16,n2=32,n3=16,nIn=8,nOut=54,targetA=0.1):
+    def __init__(self,n1=16,n2=32,n3=16,nIn=8,nOut=54,targetA=0.1,sigN=0):
         
         super().__init__()
         
@@ -31,6 +34,7 @@ class AreaProjector(GradNet):
         
         self.percept  = PerceptronDecoder(n1=n1,n2=n2,n3=n3,nIn=nIn,nOut=nOut,reluP=True)
         self.prjlayer = DeclarativeLayer(ddn)
+        self.sigN     = sigN
         
     def toGpu(self):
         
@@ -39,8 +43,13 @@ class AreaProjector(GradNet):
          
     def forward(self,zs):
         
+        sigN = self.sigN
+        
         xys = self.percept(zs)
-        xys = self.prjlayer(xys)
+        if(sigN==0):
+            xys = self.prjlayer(xys)
+        else:
+            xys[0:sigN] = self.prjlayer(xys[0:sigN])
         
         return xys
 #%% Load wing data
@@ -144,8 +153,9 @@ def affPrjWing(xy,targetA,drawP=False):
     return(xy1)
 
 if __name__ == "__main__": 
-    xyv = fromTensor(xy0.view((-1,2)))
-    xy1 = affPrjWing(xyv,0.1)
+    xyv  = fromTensor(xy0.view((-1,2)))
+    xyv += 0.05*np.random.randn(xyv.shape[0],2)
+    xy1  = affPrjWing(xyv,0.1,drawP=True)
     print(shoelaceAreaF(xyv),shoelaceAreaF(xy1))
 #%%   
 class constAreaNode(EqConstDeclarativeNode):
