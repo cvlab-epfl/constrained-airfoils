@@ -8,12 +8,10 @@ import matplotlib.pyplot as plt
 import torch
 import torch_optimizer as topt
 
-from  util       import fromTensor,makeTensor,setAxes,currentDevice,pytFile
-from  optim      import tstG
+from  netw.miscfuncs import makeTensor
 
 from airfoildata import loadAirfoilData
 from auxfuncs    import drawAirfoil,netwDataName,shoelaceArea1
-from decoder     import PerceptronDecoder
 from projarea    import AreaProjector
 from objective   import loadSurogateModel,wingLodF,predictDraglift
 
@@ -32,6 +30,12 @@ def dispLatentV3(net,model,z1,z2,z3):
     dispLatentV1(net,model,z1,'-r')
     dispLatentV1(net,model,z2,'-g')
     dispLatentV1(net,model,z3,'-b')
+    
+def setAxes(xmin,ymin,xmax,ymax,legendP=False):
+    ax=plt.gca()
+    ax.axis([xmin,xmax,ymin,ymax])
+    if(legendP):
+        plt.legend()
 
 
 zdim=8

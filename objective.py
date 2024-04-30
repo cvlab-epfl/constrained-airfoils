@@ -3,13 +3,10 @@
 #                                IMPORTS
 #-----------------------------------------------------------------------------
 
-import numpy as np
-
 import torch
-import scipy.optimize as opt
 
-from  util       import fromTensor,makeTensor,pytFile,currentDevice
-from  auxfuncs   import shoelaceArea1
+from  netw.miscfuncs import currentDevice
+from  auxfuncs      import shoelaceArea1
 
 from lod.MLP        import MLP
 from lod.GraphSage  import GraphSAGE
@@ -67,14 +64,14 @@ def loadSurogateModel(lodP=False,modelType='mlp'):
     model = MLP(predict_lod=lodP).to(device) if modelType == 'mlp' else GraphSAGE(lodP).to(device)
     if(modelType  == 'mlp'):
         if(lodP):
-            model.load_state_dict(torch.load(pytFile('misc/wings/2d/lod/mlp_state_dict_lod.pth'),map_location=device))
+            model.load_state_dict(torch.load('lod/mlp_state_dict_lod.pth',map_location=device))
         else:
-            model.load_state_dict(torch.load(pytFile('misc/wings/2d/lod/mlp_state_dict_cdl.pth'),map_location=device))
+            model.load_state_dict(torch.load('lod/mlp_state_dict_cdl.pth',map_location=device))
     else:
         if(lodP):
-            model.load_state_dict(torch.load(pytFile('misc/wings/2d/lod/gnn_state_dict_lod.pth'),map_location=device))
+            model.load_state_dict(torch.load('lod/gnn_state_dict_lod.pth',map_location=device))
         else:
-            model.load_state_dict(torch.load(pytFile('misc/wings/2d/lod/gnn_state_dict_cdl.pth'),map_location=device))
+            model.load_state_dict(torch.load('lod/gnn_state_dict_cdl.pth',map_location=device))
     
     return model
 

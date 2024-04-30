@@ -7,8 +7,8 @@ import numpy as np
 import random
 
 import torch
-from util import dumpToFile,fromTensor,floatTensor,makeTensor,loadFromFile
-from nets import NetData
+from netw.miscfuncs import dumpToFile,fromTensor,floatTensor,makeTensor,loadFromFile
+from netw.netdata  import NetData
 
 from auxfuncs import loadWingProfiles,batchAffTrf
 

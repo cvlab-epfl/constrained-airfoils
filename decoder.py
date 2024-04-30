@@ -87,22 +87,6 @@ class PerceptronDecoder(AutoDecoder,Perceptron):
                 dataT.save(fileName)
         return minLoss
 
-if __name__ == "__main__":
-    from util import floatTensor
-    from airfoildata import LatentData
-    ns    = 10
-    xdim  = 3
-    ydim  = 7
-    net   = PerceptronDecoder(n1=10,n2=10,nIn=xdim,nOut=ydim)
-    net.toGpu()
-    xs    = floatTensor((ns,xdim))
-    ys    = torch.rand ((ns,ydim),dtype=torch.float32,device=xs.device)
-    torch.nn.init.xavier_uniform_(xs)
-    data  = LatentData(xs,ys,batchN=1)
-    #data.shuffle()
-    #data.batch(0)
-    net.gtrain(data,lr=0.001)
-
 
 
         

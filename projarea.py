@@ -12,14 +12,12 @@ import torch.nn as nn
 
 from ddn.pytorch.node import EqConstDeclarativeNode,DeclarativeLayer
 
-from util     import fromTensor,currentDevice
-from nets     import GradNet
+from netw.miscfuncs    import fromTensor,currentDevice
+from nets              import GradNet
 
 from decoder  import PerceptronDecoder
 from auxfuncs import shoelaceAreaF,shoelaceAreaG,affTrf,batchShoelaceArea
 from auxfuncs import loadWingProfiles,drawAirfoil
-
-from optim import tstG
 #%%
 class AreaProjector(GradNet):
     
