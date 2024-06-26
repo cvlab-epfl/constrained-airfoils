@@ -11,6 +11,7 @@ from projarea   import  AreaProjector
 from decoder    import PerceptronDecoder
 from surrogate.MLP import MLP
 from surrogate.GraphSage import GraphSAGE
+from surrogate.MLP_uncertainty import MLP_uncertainty
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -36,25 +37,36 @@ fName = netwDataName(zdim,n1,n2,n3)
 #                            Train/Load MLP/GNN Surrogate
 #-----------------------------------------------------------------------------
 
-loadP = True
+loadP = False
 predict_lod = True  # Predicts directly de lift over drag if true, otherwise predicts both drag and lift coefficients
-model = 'mlp' # Surrogate's architecture, should be "mlp" or "gnn"
+model = 'gnn' # Surrogate's architecture, should be "mlp" or "gnn"
+uncertainty = True
 
-model = MLP(predict_lod).to(device) if model == "mlp" else GraphSAGE(predict_lod).to(device)
-            
+if uncertainty:
+    if model == "mlp":
+        model = MLP_uncertainty(predict_lod).to(device)
+    else:
+        raise Exception("Sorry, Uncertainty not available for the GNN")
+else:
+    model = MLP(predict_lod).to(device) if model == "mlp" else GraphSAGE(predict_lod).to(device)
+
 if loadP:
     model.restore()
 else:
-    model.gtrain(dataT, dataV, predict_lod)
+    model.gtrain(dataT, dataV)
     
 wings = dataV.target
 cdl = dataV.target_cdl
 for i in range(10):
+    out = model(wings[i:i+1])
     if predict_lod:
-        print("Lift over Drag prediction:", "{:.3f}".format(model(wings[i:i+1]).item()), "GT", "{:.3f}".format(cdl[i:i+1,1].item()/cdl[i:i+1,0].item()))
+        print("Lift over Drag prediction:", "{:.3f}".format(out.item()), "GT", "{:.3f}".format(cdl[i:i+1,1].item()/cdl[i:i+1,0].item()))
     else:
-        out = model(wings[i:i+1])
         print("Drag", "{:.3f}".format(out[:,0].item()), "GT", "{:.3f}".format(cdl[i:i+1,0].item()), "Lift", "{:.3f}".format(out[:,1].item()), "GT", "{:.3f}".format(cdl[i:i+1,1].item()), "Lift over Drag:", "{:.3f}".format(out[:,1].item()/out[:,0].item()), "GT", "{:.3f}".format(cdl[i:i+1,1].item()/cdl[i:i+1,0].item()))
+    
+    if uncertainty:
+        out2 = model(wings[i:i+1], out)
+        print("Uncertainty:", "{:.3f}".format(torch.norm(out2-out).item()))
 
 #%%---------------------------------------------------------------------------
 #                            Test on wings.npy
@@ -68,6 +80,9 @@ for i in range(10):
         out = model(wings[i:i+1])
         print("Drag", "{:.3f}".format(out[:,0].item()), "Lift", "{:.3f}".format(out[:,1].item()), "Lift over Drag:", "{:.3f}".format(out[:,1].item()/out[:,0].item()))
 
+    if uncertainty:
+        out2 = model(wings[i:i+1], out)
+        print("Uncertainty:", "{:.3f}".format(torch.norm(out2-out).item()))
 #%%---------------------------------------------------------------------------
 #                            Load AreaProjector and Shape Data
 #-----------------------------------------------------------------------------
@@ -116,6 +131,8 @@ plt.plot(xs,ys)
 #%%---------------------------------------------------------------------------
 #                                Run Optimization
 #-----------------------------------------------------------------------------
+import warnings
+warnings.filterwarnings("ignore")
 for i in range(10):
     zs,xys0,cdl = dataT.batch(i)
     z = zs.clone().detach().to(device).requires_grad_(True)
@@ -136,6 +153,13 @@ for i in range(10):
         loss = loss_l1(1/lod, torch.zeros_like(lod, device=device))
         loss_z = loss_l1(z, z_init)
         loss += 1.0*loss_z
+        if uncertainty:
+            out2 = model(xy1, lod)
+            if not predict_lod:
+                out2 = out2[:,1]/out2[:,0]
+            uncert = torch.norm(out2-lod)
+            loss_uncert = loss_l1(uncert, torch.zeros_like(lod, device=device))
+            loss += 0.001*loss_uncert
         loss.backward()
         # grad = z.grad
         # print(grad)
@@ -143,6 +167,9 @@ for i in range(10):
         optimizer.zero_grad()
         
     print("Final Lift over drag:", lod.item())
+    if uncertainty:
+        out2 = model(xy1, lod)
+        print("Uncertainty:", "{:.3f}".format(torch.norm(out2-lod).item()))
 
     fig = plt.plot()
     xy1 = net(z_init).view((-1,2)).to(device)
