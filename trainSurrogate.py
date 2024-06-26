@@ -37,9 +37,9 @@ fName = netwDataName(zdim,n1,n2,n3)
 #                            Train/Load MLP/GNN Surrogate
 #-----------------------------------------------------------------------------
 
-loadP = False
+loadP = True
 predict_lod = True  # Predicts directly de lift over drag if true, otherwise predicts both drag and lift coefficients
-model = 'gnn' # Surrogate's architecture, should be "mlp" or "gnn"
+model = 'mlp' # Surrogate's architecture, should be "mlp" or "gnn"
 uncertainty = True
 
 if uncertainty:
