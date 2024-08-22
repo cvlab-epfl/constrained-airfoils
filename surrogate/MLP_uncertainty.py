@@ -43,10 +43,10 @@ class MLP_uncertainty(nn.Module):
         
         weights = 1/dataT.target_cdl.std(0)
 
-        lr = 1e-4
-        NEPOCHS = 5000
+        lr = 1e-4# if self.predict_lod else 1e-5
+        NEPOCHS = 2500
         
-        loss_fn = nn.L1Loss() if self.predict_lod else nn.L1Loss(reduction='none')
+        loss_fn = nn.MSELoss() if self.predict_lod else nn.MSELoss(reduction='none')
         optimizer = optim.Adam(self.parameters(), lr=lr, weight_decay=1e-4)
         scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=lr, steps_per_epoch=int(dataT.batchN*0.8), epochs=NEPOCHS)
         best_score = np.inf
@@ -55,7 +55,7 @@ class MLP_uncertainty(nn.Module):
             self.train()
             running_loss = []
             for bat in range(dataT.batchN):
-                inputT, targetT, cdlT = dataT.batch(bat)
+                _, targetT, cdlT = dataT.batch(bat)
                 targetT += (0.00001**0.5)*torch.randn(targetT.shape).to(device)
                 
                 y = self(targetT)
@@ -76,13 +76,13 @@ class MLP_uncertainty(nn.Module):
                 
             scheduler.step()
             
-            if (epoch+1)%100==0:        
+            if (epoch)%100==0:        
                 self.eval()
                 test_loss = []
                 test_loss_lod = []
                 with torch.no_grad():
                     for bat in range(dataV.batchN):
-                        inputV, targetV, cdlV = dataV.batch(bat)
+                        _, targetV, cdlV = dataV.batch(bat)
                         y = self(targetV)
                         if self.predict_lod:
                             loss = loss_fn(y[:,0], cdlV[:,1]/cdlV[:,0])
@@ -91,17 +91,19 @@ class MLP_uncertainty(nn.Module):
                             loss = (loss_fn(y, cdlV) * weights).mean()
                             loss_lod = loss_fn(y[:,1]/y[:,0], cdlV[:,1]/cdlV[:,0]).mean()
                             
-                        y = self(targetT, (cdlV[:,1]/cdlV[:,0]).unsqueeze(-1)) if self.predict_lod else self(targetT, cdlV)
+                        y = self(targetV, (cdlV[:,1]/cdlV[:,0]).unsqueeze(-1)) if self.predict_lod else self(targetV, cdlV)
                         if self.predict_lod:
-                            loss += loss_fn(y[:,0], cdlV[:,1]/cdlV[:,0])
-                            loss_lod += loss
+                            loss2 = loss_fn(y[:,0], cdlV[:,1]/cdlV[:,0])
+                            loss += loss2
+                            loss_lod += loss2
                         else:
-                            loss += (loss_fn(y, cdlV) * weights).mean()
+                            loss2 = (loss_fn(y, cdlV) * weights).mean()
+                            loss += loss2
                             loss_lod += loss_fn(y[:,1]/y[:,0], cdlV[:,1]/cdlV[:,0]).mean()
                             
-                        test_loss.append(loss.item())
-                        test_loss_lod.append(loss_lod.item())
-                    print(epoch, "Train Mean Absolute Error", np.mean(running_loss), "Test MAE:", np.mean(test_loss), "Lift over Drag MAE", np.mean(test_loss_lod))
+                        test_loss.append(loss.item()/2)
+                        test_loss_lod.append(loss_lod.item()/2)
+                    print(epoch, "Train Mean Absolute Error", "{0:0.2f}".format(np.mean(running_loss)), "Test MAE:", "{0:0.2f}".format(np.mean(test_loss)), "Lift over Drag MAE", "{0:0.2f}".format(np.mean(test_loss_lod)))
 
                 if np.mean(test_loss)<best_score:
                     best_score = np.mean(test_loss)

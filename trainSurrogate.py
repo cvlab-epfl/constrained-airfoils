@@ -30,25 +30,21 @@ dataT = loadAirfoilData(zdim=zdim,batchN=100,trainP=True,cdl=True)
 dataV = loadAirfoilData(zdim=zdim,batchN=11,trainP=False,cdl=True)
 
 ydim  = dataT.target.size(1)
-drawAirfoil(dataT.target[1])
+drawAirfoil(dataT.target[0])
 fName = netwDataName(zdim,n1,n2,n3)
 
 #%%---------------------------------------------------------------------------
-#                            Train/Load MLP/GNN Surrogate
+#                            Train/Load MLP Surrogate
 #-----------------------------------------------------------------------------
 
-loadP = True
+loadP = False
 predict_lod = True  # Predicts directly de lift over drag if true, otherwise predicts both drag and lift coefficients
-model = 'mlp' # Surrogate's architecture, should be "mlp" or "gnn"
-uncertainty = True
+uncertainty = False
 
 if uncertainty:
-    if model == "mlp":
-        model = MLP_uncertainty(predict_lod).to(device)
-    else:
-        raise Exception("Sorry, Uncertainty not available for the GNN")
+    model = MLP_uncertainty(predict_lod).to(device)
 else:
-    model = MLP(predict_lod).to(device) if model == "mlp" else GraphSAGE(predict_lod).to(device)
+    model = MLP(predict_lod).to(device)
 
 if loadP:
     model.restore()
@@ -57,16 +53,43 @@ else:
     
 wings = dataV.target
 cdl = dataV.target_cdl
-for i in range(10):
-    out = model(wings[i:i+1])
-    if predict_lod:
-        print("Lift over Drag prediction:", "{:.3f}".format(out.item()), "GT", "{:.3f}".format(cdl[i:i+1,1].item()/cdl[i:i+1,0].item()))
-    else:
-        print("Drag", "{:.3f}".format(out[:,0].item()), "GT", "{:.3f}".format(cdl[i:i+1,0].item()), "Lift", "{:.3f}".format(out[:,1].item()), "GT", "{:.3f}".format(cdl[i:i+1,1].item()), "Lift over Drag:", "{:.3f}".format(out[:,1].item()/out[:,0].item()), "GT", "{:.3f}".format(cdl[i:i+1,1].item()/cdl[i:i+1,0].item()))
+with torch.no_grad():
+
+    for i in range(10):
+
+        out = model(wings[i:i+1])
+        if predict_lod:
+            print("Lift over Drag prediction:", "{:.3f}".format(out.item()), "GT", "{:.3f}".format(cdl[i:i+1,1].item()/cdl[i:i+1,0].item()))
+        else:
+            print("Drag", "{:.3f}".format(out[:,0].item()), "GT", "{:.3f}".format(cdl[i:i+1,0].item()), "Lift", "{:.3f}".format(out[:,1].item()), "GT", "{:.3f}".format(cdl[i:i+1,1].item()), "Lift over Drag:", "{:.3f}".format(out[:,1].item()/out[:,0].item()), "GT", "{:.3f}".format(cdl[i:i+1,1].item()/cdl[i:i+1,0].item()))
+        
+        if uncertainty:
+            out2 = model(wings[i:i+1], out)
+            print("Uncertainty:", "{:.3f}".format(torch.norm(out2-out).item()))
     
-    if uncertainty:
-        out2 = model(wings[i:i+1], out)
-        print("Uncertainty:", "{:.3f}".format(torch.norm(out2-out).item()))
+    train_loss_lod = []
+    loss_fn = nn.L1Loss() if predict_lod else nn.L1Loss(reduction='none')
+
+    for bat in range(dataT.batchN):
+        _, targetT, cdlT = dataV.batch(bat)
+        y = model(targetT)
+        if model.predict_lod:
+            loss_lod = loss_fn(y[:,0], cdlT[:,1]/cdlT[:,0])
+        else:
+            loss_lod = loss_fn(y[:,1]/y[:,0], cdlT[:,1]/cdlT[:,0]).mean()
+        train_loss_lod.append(loss_lod.item())
+    print("Train Lift over Drag MAE", np.mean(train_loss_lod))
+    
+    test_loss_lod = []
+    for bat in range(dataV.batchN):
+        _, targetV, cdlV = dataV.batch(bat)
+        y = model(targetV)
+        if model.predict_lod:
+            loss_lod = loss_fn(y[:,0], cdlV[:,1]/cdlV[:,0])
+        else:
+            loss_lod = loss_fn(y[:,1]/y[:,0], cdlV[:,1]/cdlV[:,0]).mean()
+        test_loss_lod.append(loss_lod.item())
+    print("Test Lift over Drag MAE", np.mean(test_loss_lod))
 
 #%%---------------------------------------------------------------------------
 #                            Test on wings.npy
@@ -143,10 +166,12 @@ for i in range(10):
 
     for e in range(max_epochs):
         xy1 = net(z[:1]).to(device)
-        lod = model(xy1)
+        out = model(xy1)
         if not predict_lod:
-            lod = lod[:,1]/lod[:,0]
-        # cd, cl = cdl[:,0], cdl[:,1]
+            lod = out[:,1]/out[:,0]
+        else:
+            lod = out
+
         if e==0:
             print("Initial Lift over drag:", lod.item())
         print(100*e/max_epochs, "%", end='\r')
@@ -154,7 +179,7 @@ for i in range(10):
         loss_z = loss_l1(z, z_init)
         loss += 1.0*loss_z
         if uncertainty:
-            out2 = model(xy1, lod)
+            out2 = model(xy1, out)
             if not predict_lod:
                 out2 = out2[:,1]/out2[:,0]
             uncert = torch.norm(out2-lod)
@@ -168,8 +193,7 @@ for i in range(10):
         
     print("Final Lift over drag:", lod.item())
     if uncertainty:
-        out2 = model(xy1, lod)
-        print("Uncertainty:", "{:.3f}".format(torch.norm(out2-lod).item()))
+        print("Uncertainty:", "{:.3f}".format(uncert.item()))
 
     fig = plt.plot()
     xy1 = net(z_init).view((-1,2)).to(device)
@@ -179,87 +203,3 @@ for i in range(10):
     airfoils = xy1.reshape(z.shape[0], xy1.shape[0]//z.shape[0], 2)
     drawAirfoil(airfoils[0],color='-r')
     plt.show()
-
-#%%---------------------------------------------------------------------------
-#                            Test MLP Grads vs Finite-Diff.
-#-----------------------------------------------------------------------------
-# 
-dbgP=False
-    
-def stiffnessF(K,xy1):
-    
-    if((2==len(xy1.size())) and (2==xy1.size(1))):
-        xy2 = xy1
-    else:
-        xy2 = xy1[0].view((-1,2))
-    
-    xs  = xy2[:,0]
-    ys  = xy2[:,1]
-    
-    return 0.5 * (xs.T @ K @ xs +  ys.T @ K @ ys)
-
-def objF (z):
-    global model
-    
-    z  = makeTensor(z).to(device)
-    return wingLodF(net,z,K=None,model=model).item()
-
-def objG (z):
-    global model
-    
-    z  = makeTensor(z).to(device)
-    return fromTensor(wingLodG(net,z,K=None,model=model))
-
-def wingLodF(net,z,model=None,K=None):
-        
-    #print(z)
-    
-    z1  = z.view((1,-1))
-    xy1 = net(z1)
-    
-    if(dbgP):
-        lod = torch.sum(xy1.view((-1,2))[:,0]*xy1.view((-1,2))[:,1])
-    else:
-        lod = model(xy1)
-        
-    #print(cd.size(),cl.size())
-    
-    obj = - lod
-    if(K is not None):
-        obj = obj + stiffnessF(K,xy1)
-        
-    return obj
-
-def wingLodG(net,z,model=None,K=None):
-    
-    z   = z.clone().detach().requires_grad_(True)
-    obj = wingLodF(net,z,model=model,K=K) 
-    obj.backward()
-    grad = z.grad
-    
-    return grad
-
-def tstG(objF,objG,xs,eps=1e-8):
-    
-    xs  = np.asarray(xs,dtype=np.float64)
-    g   = objG(xs)
-
-    for i,xi in enumerate(xs):
-        xi = xs[i]
-        xs[i] = xi + eps
-        fp    = objF(xs) 
-        xs[i] = xi - eps
-        fm    = objF(xs) 
-        xs[i] = xi
-        df    = (fp-fm)/(2.0*eps)
-        print(i,':',g[i],df,'->',g[i]/df)
-
-z0 = fromTensor(zs[0])
-objG(z0)
-
-# xs  = np.asarray(z0,dtype=np.float64)
-# g   = objF(xs) 
-# print(g)
-
-tstG(objF,objG,z0,1e-4)
-# %%

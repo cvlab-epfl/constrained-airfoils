@@ -39,10 +39,10 @@ class MLP(nn.Module):
         
         weights = 1/dataT.target_cdl.std(0)
 
-        lr = 1e-4
+        lr = 1e-5
         NEPOCHS = 5000
         
-        loss_fn = nn.L1Loss() if self.predict_lod else nn.L1Loss(reduction='none')
+        loss_fn = nn.MSELoss() if self.predict_lod else nn.MSELoss(reduction='none')
         optimizer = optim.Adam(self.parameters(), lr=lr, weight_decay=1e-4)
         scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=lr, steps_per_epoch=int(dataT.batchN*0.8), epochs=NEPOCHS)
         best_score = np.inf
