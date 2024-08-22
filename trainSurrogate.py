@@ -37,7 +37,7 @@ fName = netwDataName(zdim,n1,n2,n3)
 #                            Train/Load MLP Surrogate
 #-----------------------------------------------------------------------------
 
-loadP = False
+loadP = True
 predict_lod = True  # Predicts directly de lift over drag if true, otherwise predicts both drag and lift coefficients
 uncertainty = False
 
