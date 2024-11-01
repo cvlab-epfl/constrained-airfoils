@@ -176,25 +176,30 @@ def drawAirfoil(xs,color='-b'):
 #                                Data
 #-----------------------------------------------------------------------------
 
-def loadWingProfiles(step=None,trainP=True,targetA=None,cdl=False):
+def loadWingProfiles(step=None,trainP=True,targetA=None,AoA=None):
    
-    xys = np.load(wingDataName(trainP,targetA,step,cdl))
+    assert(AoA is None)
+    
+    xys = np.load(wingDataName(trainP,targetA,step,False))
     
     if(targetA is None and step is not None):
         id1 = range(0,301,step)
         id2 = range(301,602,step)
         ids = np.hstack((np.array(id1),np.array(id2),np.array(0)))
         
-        ns  = xys.shape[0]
+        ns   = xys.shape[0]
         xys  = xys.reshape((ns,602,2))
         xys  = xys[:,ids,:]
         xys  = xys.reshape((ns,-1))
         
     return np.asarray(xys,dtype=np.float32)
 
-def saveWingProfiles(xys,step=None,trainP=True,targetA=None):
+def saveWingProfiles(xys,step=None,trainP=True,targetA=None,AoA=None):
     
-    np.save(wingDataName(trainP,targetA,step),xys)
+    assert(AoA is None)
+    
+    np.save(wingDataName(trainP,targetA,step,False),xys)
+
 
 def wingDataName(trainP,targetA,step,cdl):
     
@@ -216,7 +221,9 @@ def wingDataName(trainP,targetA,step,cdl):
         
     return fName
 
-def netwDataName(zdim,n1,n2,n3,targetA=None):
+def netwDataName(zdim,n1,n2,n3,targetA=None,lambdaN=0,sigN=0):
+    
+    assert(sigN==0)
     
     if(targetA is None):
         fileName = 'dat/airf-{}-{}-{}-{}'.format(zdim,n1,n2,n3)

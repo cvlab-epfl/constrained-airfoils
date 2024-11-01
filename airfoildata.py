@@ -18,9 +18,13 @@ from auxfuncs import loadWingProfiles
 #%%        
 class LatentData(NetData):
     
-    def __init__(self,inp,out,cdl,batchN=1):
+    def __init__(self,inp,out,batchN=1,sigN=0,sigA=0.0,sigT=0.0):
         
-        super(LatentData, self).__init__(inp,out,cdl,batchN=batchN)
+        assert(sigN==0)
+        assert(sigA==0.0)
+        assert(sigT==0.01)
+        
+        super(LatentData, self).__init__(inp,out,batchN=batchN)
         
         self.setids(randP=False)
         
@@ -101,16 +105,11 @@ class WingData(LatentData):
         return self.target_cdl[index]
         
 #%%      
-def loadAirfoilData(zdim=20,trainP=True,batchN=100,step=None,targetA=None,cdl=False):
+def loadAirfoilData(zdim=20,trainP=True,batchN=100,step=None,targetA=None,AoA=0,sigN=0,sigA=0.1,sigT=0.02,ns=None):
     
-    ys = loadWingProfiles(step=step,trainP=trainP,targetA=targetA,cdl=cdl)
-    if cdl:
-        cdls = ys[...,-2:]
-        ys = ys[...,:-2]
-    else:
-        cdls=None
-
-    ns = ys.shape[0]
+    ys = loadWingProfiles(step=step,trainP=trainP,targetA=targetA,AoA=AoA)
+    if(ns is None):
+        ns = ys.shape[0]
     xs = floatTensor((ns,zdim))
     torch.nn.init.xavier_uniform_(xs)
     
@@ -120,10 +119,8 @@ def loadAirfoilData(zdim=20,trainP=True,batchN=100,step=None,targetA=None,cdl=Fa
         if(ns < ys.shape[0]):
             xs = xs[0:ns]
             ys = ys[0:ns]
-            if cdl:
-                cdls = cdls[0:ns]
-            
-    return WingData(xs,ys,cdls,batchN=batchN)
+
+    return WingData(xs,ys,batchN=batchN,sigN=sigN,sigA=sigA,sigT=sigT)
 
 #dat=loadAirfoilData(zdim=10,batchN=100,trainP=True,step=11)
 #xs,ys = dat.batch(0)
@@ -184,18 +181,3 @@ def randomBatchIndices(ns,batchL):
         
     return np.vstack(bs)
     
-#%%---------------------------------------------------------------------------
-#                                Test
-#-----------------------------------------------------------------------------
-
-if __name__ == "__main__":
-    ns   = 6
-    zDim = 20
-    oDim = 3
-    x = np.asarray(np.random.rand(ns,zDim),dtype=np.float32)
-    y = np.asarray(np.random.rand(ns,oDim),dtype=np.float32)
-    dat = LatentData(x,y,2)
-    dat.setids(True)
-    print(dat.ids)
-    dat.batch(0)
-    dat.save('old/foo')
