@@ -71,7 +71,7 @@ net,dat,fName = loadProjector(lambdaN=lambdaN,sigN=sigN,sigA=0.0,loadP=False,AoA
 n     = 512
 z     = dat.inputs(torch.tensor([n],device=dat.target.device))[0].detach().requires_grad_(True)
 #%%
-net = net.percept
+#net = net.percept
 #%%
 optim = torch.optim.Adam([z],lr=0.01)
 optim.zero_grad()
